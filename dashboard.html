@@ -739,119 +739,56 @@ td {
 </div>
 
 <div class="toast" id="toast"></div>
+<!-- SUPABASE LIBRARY -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+<!-- SUPABASE CONFIGURATION -->
+<script src="./config.js"></script>
+
+<!-- ADMIN DASHBOARD JAVASCRIPT -->
 <script>
-/* =========================================
-   1. DEMO PRODUCT DATA
 
-   This is local browser data only.
-   Later we will replace it with Supabase.
-========================================= */
+const db = window.supabaseClient;
 
-const starterProducts = [
-  {
-    id:1,
-    name:"MacBook Air M2",
-    brand:"Apple",
-    price:79990,
-    category:"Premium",
-    processor:"Apple M2",
-    ram:"8GB RAM",
-    storage:"256GB SSD",
-    display:"13.6-inch",
-    image:"https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=900",
-    description:"Premium lightweight laptop.",
-    status:"Available"
-  },
-  {
-    id:2,
-    name:"ROG Strix G16",
-    brand:"ASUS",
-    price:114990,
-    category:"Gaming",
-    processor:"Intel Core i7",
-    ram:"16GB RAM",
-    storage:"1TB SSD",
-    display:"16-inch",
-    image:"https://images.unsplash.com/photo-1593642632823-8f785ba67e45?w=900",
-    description:"Gaming and high performance laptop.",
-    status:"Available"
-  },
-  {
-    id:3,
-    name:"ThinkPad E14",
-    brand:"Lenovo",
-    price:62990,
-    category:"Business",
-    processor:"Intel Core i5",
-    ram:"16GB RAM",
-    storage:"512GB SSD",
-    display:"14-inch",
-    image:"https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=900",
-    description:"Professional business laptop.",
-    status:"Sold"
-  }
-];
-
-const STORAGE_KEY = "laptopx_demo_products";
-
-/* =========================================
-   2. LOAD AND SAVE DEMO DATA
-========================================= */
-
-function loadProducts() {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved === null) return [...starterProducts];
-    const parsed = JSON.parse(saved);
-    return Array.isArray(parsed) ? parsed : [...starterProducts];
-  } catch (error) {
-    return [...starterProducts];
-  }
-}
-
-let products = loadProducts();
-
-function saveProducts() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
-}
-
-/* =========================================
-   3. ELEMENT REFERENCES
-========================================= */
+let currentAdmin = null;
+let products = [];
 
 const productTable = document.getElementById("productTable");
 const modal = document.getElementById("productModal");
 const form = document.getElementById("productForm");
 
-/* =========================================
-   4. PRICE FORMAT
-========================================= */
+const loginScreen = document.getElementById("loginScreen");
+const loginForm = document.getElementById("loginForm");
+
+// ========================================
+// 1. PRICE FORMAT
+// ========================================
 
 function money(amount) {
-  return "₹" + Number(amount).toLocaleString("en-IN");
+  return "₹" + Number(amount || 0).toLocaleString("en-IN");
 }
 
-/* =========================================
-   5. SAFE TEXT DISPLAY
-========================================= */
+// ========================================
+// 2. SAFE TEXT DISPLAY
+// ========================================
 
 function escapeHTML(value) {
   return String(value ?? "").replace(/[&<>"']/g, char => ({
-    "&":"&amp;",
-    "<":"&lt;",
-    ">":"&gt;",
-    '"':"&quot;",
-    "'":"&#39;"
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
   })[char]);
 }
 
-/* =========================================
-   6. TOAST NOTIFICATION
-========================================= */
+// ========================================
+// 3. TOAST MESSAGE
+// ========================================
 
 function showToast(message) {
   const toast = document.getElementById("toast");
+
   toast.textContent = message;
   toast.classList.add("show");
 
@@ -860,26 +797,161 @@ function showToast(message) {
   }, 2500);
 }
 
-/* =========================================
-   7. UPDATE DASHBOARD STATISTICS
-========================================= */
+// ========================================
+// 4. ADMIN LOGIN
+// ========================================
 
-function updateStats() {
-  const available = products.filter(p => p.status === "Available");
-  const sold = products.filter(p => p.status === "Sold");
+loginForm.addEventListener("submit", async function(event) {
+  event.preventDefault();
 
-  document.getElementById("totalCount").textContent = products.length;
-  document.getElementById("availableCount").textContent = available.length;
-  document.getElementById("soldCount").textContent = sold.length;
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value;
 
-  const totalValue = available.reduce((sum,p) => sum + Number(p.price),0);
+  const errorBox = document.getElementById("loginError");
 
-  document.getElementById("inventoryValue").textContent = money(totalValue);
+  errorBox.textContent = "Logging in...";
+
+  const { error } = await db.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if (error) {
+    errorBox.textContent = error.message;
+    return;
+  }
+
+  await checkAdmin();
+});
+
+// ========================================
+// 5. CHECK ADMIN ACCESS
+// ========================================
+
+async function checkAdmin() {
+
+  const { data: sessionData, error: sessionError } =
+    await db.auth.getSession();
+
+  if (sessionError || !sessionData.session) {
+    loginScreen.style.display = "flex";
+    document.querySelector(".app").style.display = "none";
+    return;
+  }
+
+  const user = sessionData.session.user;
+
+  const { data: adminRecord, error } = await db
+    .from("admin_users")
+    .select("user_id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (error || !adminRecord) {
+
+    await db.auth.signOut();
+
+    loginScreen.style.display = "flex";
+    document.querySelector(".app").style.display = "none";
+
+    document.getElementById("loginError").textContent =
+      "You are not authorized to access this dashboard.";
+
+    return;
+  }
+
+  currentAdmin = user;
+
+  loginScreen.style.display = "none";
+  document.querySelector(".app").style.display = "flex";
+
+  await loadProducts();
 }
 
-/* =========================================
-   8. DISPLAY PRODUCTS IN TABLE
-========================================= */
+// ========================================
+// 6. LOGOUT
+// ========================================
+
+document.getElementById("logoutBtn").addEventListener("click", async function() {
+
+  await db.auth.signOut();
+
+  currentAdmin = null;
+  products = [];
+
+  document.querySelector(".app").style.display = "none";
+  loginScreen.style.display = "flex";
+
+  document.getElementById("loginPassword").value = "";
+  document.getElementById("loginError").textContent = "";
+
+});
+
+// ========================================
+// 7. LOAD PRODUCTS FROM SUPABASE
+// ========================================
+
+async function loadProducts() {
+
+  productTable.innerHTML = `
+    <tr>
+      <td colspan="5">
+        <div class="empty">Loading products...</div>
+      </td>
+    </tr>
+  `;
+
+  const { data, error } = await db
+    .from("laptops")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error(error);
+    showToast("Could not load products: " + error.message);
+    return;
+  }
+
+  products = data || [];
+
+  renderProducts();
+}
+
+// ========================================
+// 8. UPDATE DASHBOARD STATISTICS
+// ========================================
+
+function updateStats() {
+
+  const available = products.filter(
+    p => p.status === "Available"
+  );
+
+  const sold = products.filter(
+    p => p.status === "Sold"
+  );
+
+  document.getElementById("totalCount").textContent =
+    products.length;
+
+  document.getElementById("availableCount").textContent =
+    available.length;
+
+  document.getElementById("soldCount").textContent =
+    sold.length;
+
+  const totalValue = available.reduce(
+    (sum, p) => sum + Number(p.price || 0),
+    0
+  );
+
+  document.getElementById("inventoryValue").textContent =
+    money(totalValue);
+}
+
+// ========================================
+// 9. DISPLAY PRODUCTS
+// ========================================
 
 function renderProducts() {
 
@@ -890,11 +962,13 @@ function renderProducts() {
 
   const filtered = products.filter(product => {
 
-    const matchesSearch = [
+    const searchable = [
       product.name,
       product.brand,
       product.category
-    ].join(" ").toLowerCase().includes(query);
+    ].join(" ").toLowerCase();
+
+    const matchesSearch = searchable.includes(query);
 
     const matchesStatus =
       status === "All" || product.status === status;
@@ -903,6 +977,7 @@ function renderProducts() {
   });
 
   if (!filtered.length) {
+
     productTable.innerHTML = `
       <tr>
         <td colspan="5">
@@ -910,6 +985,7 @@ function renderProducts() {
         </td>
       </tr>
     `;
+
   } else {
 
     productTable.innerHTML = filtered.map(product => `
@@ -918,15 +994,17 @@ function renderProducts() {
 
         <td>
           <div class="product-cell">
+
             <img
-              src="${escapeHTML(product.image)}"
+              src="${escapeHTML(product.image_url || "")}"
               alt="${escapeHTML(product.name)}"
-              onerror="this.style.opacity='.3'"
             >
+
             <div>
               <strong>${escapeHTML(product.name)}</strong>
               <small>${escapeHTML(product.category)}</small>
             </div>
+
           </div>
         </td>
 
@@ -935,7 +1013,9 @@ function renderProducts() {
         <td><strong>${money(product.price)}</strong></td>
 
         <td>
-          <span class="status ${product.status === "Sold" ? "sold":"available"}">
+          <span class="status ${
+            product.status === "Sold" ? "sold" : "available"
+          }">
             ${escapeHTML(product.status)}
           </span>
         </td>
@@ -944,20 +1024,23 @@ function renderProducts() {
           <div class="actions">
 
             <button class="action-btn"
-              title="Edit product"
-              onclick="editProduct(${Number(product.id)})">
+              data-action="edit"
+              data-id="${escapeHTML(product.id)}"
+              title="Edit">
               <i data-lucide="pencil" size="15"></i>
             </button>
 
             <button class="action-btn"
-              title="Toggle availability"
-              onclick="toggleStatus(${Number(product.id)})">
+              data-action="toggle"
+              data-id="${escapeHTML(product.id)}"
+              title="Change status">
               <i data-lucide="refresh-cw" size="15"></i>
             </button>
 
             <button class="action-btn delete"
-              title="Delete product"
-              onclick="deleteProduct(${Number(product.id)})">
+              data-action="delete"
+              data-id="${escapeHTML(product.id)}"
+              title="Delete">
               <i data-lucide="trash-2" size="15"></i>
             </button>
 
@@ -967,189 +1050,348 @@ function renderProducts() {
       </tr>
 
     `).join("");
+
   }
 
   updateStats();
   lucide.createIcons();
 }
 
-/* =========================================
-   9. OPEN ADD PRODUCT FORM
-========================================= */
+// ========================================
+// 10. PRODUCT TABLE ACTIONS
+// ========================================
+
+productTable.addEventListener("click", function(event) {
+
+  const button = event.target.closest("[data-action]");
+
+  if (!button) return;
+
+  const id = button.dataset.id;
+  const action = button.dataset.action;
+
+  if (action === "edit") editProduct(id);
+  if (action === "toggle") toggleStatus(id);
+  if (action === "delete") deleteProduct(id);
+
+});
+
+// ========================================
+// 11. OPEN ADD PRODUCT FORM
+// ========================================
 
 function openAddModal() {
+
   form.reset();
 
   document.getElementById("editId").value = "";
-  document.getElementById("modalTitle").textContent = "Add New Laptop";
+  document.getElementById("currentImageUrl").value = "";
+
+  document.getElementById("modalTitle").textContent =
+    "Add New Laptop";
+
   document.getElementById("status").value = "Available";
 
   modal.classList.add("open");
 }
 
-/* =========================================
-   10. EDIT EXISTING PRODUCT
-========================================= */
+// ========================================
+// 12. EDIT PRODUCT
+// ========================================
 
 function editProduct(id) {
 
   const product = products.find(p => p.id === id);
+
   if (!product) return;
 
   document.getElementById("editId").value = product.id;
-  document.getElementById("name").value = product.name;
-  document.getElementById("brand").value = product.brand;
-  document.getElementById("price").value = product.price;
-  document.getElementById("category").value = product.category;
+
+  document.getElementById("name").value = product.name || "";
+  document.getElementById("brand").value = product.brand || "";
+  document.getElementById("price").value = product.price || "";
+  document.getElementById("category").value = product.category || "Student";
+
   document.getElementById("processor").value = product.processor || "";
   document.getElementById("ram").value = product.ram || "";
   document.getElementById("storage").value = product.storage || "";
   document.getElementById("display").value = product.display || "";
-  document.getElementById("image").value = product.image;
-  document.getElementById("description").value = product.description || "";
-  document.getElementById("status").value = product.status;
 
-  document.getElementById("modalTitle").textContent = "Edit Laptop";
+  document.getElementById("description").value =
+    product.description || "";
+
+  document.getElementById("status").value =
+    product.status || "Available";
+
+  document.getElementById("currentImageUrl").value =
+    product.image_url || "";
+
+  document.getElementById("imageFile").value = "";
+
+  document.getElementById("modalTitle").textContent =
+    "Edit Laptop";
 
   modal.classList.add("open");
 }
 
-/* =========================================
-   11. ADD OR UPDATE PRODUCT
-========================================= */
+// ========================================
+// 13. UPLOAD IMAGE TO IMAGESLP BUCKET
+// ========================================
 
-form.addEventListener("submit", function(event) {
+async function uploadImage(file) {
+
+  if (!file) return null;
+
+  const allowedTypes = [
+    "image/jpeg",
+    "image/png",
+    "image/webp"
+  ];
+
+  if (!allowedTypes.includes(file.type)) {
+    throw new Error("Only JPG, PNG and WebP images are allowed.");
+  }
+
+  if (file.size > 5 * 1024 * 1024) {
+    throw new Error("Image must be smaller than 5 MB.");
+  }
+
+  const extension = file.name.split(".").pop().toLowerCase();
+
+  const filePath =
+    currentAdmin.id + "/" +
+    crypto.randomUUID() + "." + extension;
+
+  const { error } = await db.storage
+    .from("imageslp")
+    .upload(filePath, file, {
+      cacheControl: "3600",
+      upsert: false
+    });
+
+  if (error) throw error;
+
+  const { data } = db.storage
+    .from("imageslp")
+    .getPublicUrl(filePath);
+
+  return data.publicUrl;
+}
+
+// ========================================
+// 14. ADD OR UPDATE PRODUCT
+// ========================================
+
+form.addEventListener("submit", async function(event) {
 
   event.preventDefault();
 
-  const editId = document.getElementById("editId").value;
+  const saveButton = form.querySelector('button[type="submit"]');
 
-  const productData = {
-    id: editId ? Number(editId) : Date.now(),
-    name: document.getElementById("name").value.trim(),
-    brand: document.getElementById("brand").value.trim(),
-    price: Number(document.getElementById("price").value),
-    category: document.getElementById("category").value,
-    processor: document.getElementById("processor").value.trim(),
-    ram: document.getElementById("ram").value.trim(),
-    storage: document.getElementById("storage").value.trim(),
-    display: document.getElementById("display").value.trim(),
-    image: document.getElementById("image").value.trim(),
-    description: document.getElementById("description").value.trim(),
-    status: document.getElementById("status").value
-  };
+  saveButton.disabled = true;
+  saveButton.textContent = "Saving...";
 
-  if (!productData.name || !productData.brand ||
-      !productData.image || !Number.isFinite(productData.price) ||
-      productData.price < 0) {
-    showToast("Please check the required fields.");
-    return;
-  }
+  try {
 
-  if (editId) {
+    const editId = document.getElementById("editId").value;
 
-    products = products.map(product =>
-      product.id === Number(editId) ? productData : product
+    const imageFile = document.getElementById("imageFile").files[0];
+
+    let imageUrl = document.getElementById("currentImageUrl").value;
+
+    if (imageFile) {
+      imageUrl = await uploadImage(imageFile);
+    }
+
+    if (!imageUrl) {
+      throw new Error("Please select a laptop image.");
+    }
+
+    const productData = {
+
+      name: document.getElementById("name").value.trim(),
+
+      brand: document.getElementById("brand").value.trim(),
+
+      price: Number(document.getElementById("price").value),
+
+      category: document.getElementById("category").value,
+
+      processor: document.getElementById("processor").value.trim(),
+
+      ram: document.getElementById("ram").value.trim(),
+
+      storage: document.getElementById("storage").value.trim(),
+
+      display: document.getElementById("display").value.trim(),
+
+      image_url: imageUrl,
+
+      description: document.getElementById("description").value.trim(),
+
+      status: document.getElementById("status").value,
+
+      updated_at: new Date().toISOString()
+
+    };
+
+    if (
+      !productData.name ||
+      !productData.brand ||
+      !Number.isFinite(productData.price) ||
+      productData.price < 0
+    ) {
+      throw new Error("Please check the required fields.");
+    }
+
+    let result;
+
+    if (editId) {
+
+      result = await db
+        .from("laptops")
+        .update(productData)
+        .eq("id", editId);
+
+    } else {
+
+      result = await db
+        .from("laptops")
+        .insert(productData);
+
+    }
+
+    if (result.error) throw result.error;
+
+    closeModal();
+
+    await loadProducts();
+
+    showToast(
+      editId
+        ? "Laptop updated successfully!"
+        : "Laptop added successfully!"
     );
 
-    showToast("Laptop updated successfully!");
+  } catch (error) {
 
-  } else {
+    console.error(error);
+    showToast(error.message || "Something went wrong.");
 
-    products.unshift(productData);
+  } finally {
 
-    showToast("New laptop added successfully!");
+    saveButton.disabled = false;
+
+    saveButton.innerHTML = `
+      <i data-lucide="save" size="16"></i>
+      Save Laptop
+    `;
+
+    lucide.createIcons();
 
   }
 
-  saveProducts();
-  renderProducts();
-  closeModal();
 });
 
-/* =========================================
-   12. DELETE PRODUCT
-========================================= */
+// ========================================
+// 15. DELETE PRODUCT
+// ========================================
 
-function deleteProduct(id) {
+async function deleteProduct(id) {
 
   const product = products.find(p => p.id === id);
+
   if (!product) return;
 
-  if (!confirm("Are you sure you want to delete " + product.name + "?")) {
+  if (!confirm("Delete " + product.name + "?")) return;
+
+  const { error } = await db
+    .from("laptops")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    showToast(error.message);
     return;
   }
 
-  products = products.filter(p => p.id !== id);
-
-  saveProducts();
-  renderProducts();
+  await loadProducts();
 
   showToast("Product deleted.");
 }
 
-/* =========================================
-   13. MARK SOLD / AVAILABLE
-========================================= */
+// ========================================
+// 16. CHANGE PRODUCT STATUS
+// ========================================
 
-function toggleStatus(id) {
+async function toggleStatus(id) {
 
-  products = products.map(product => {
+  const product = products.find(p => p.id === id);
 
-    if (product.id === id) {
-      return {
-        ...product,
-        status: product.status === "Sold" ? "Available" : "Sold"
-      };
-    }
+  if (!product) return;
 
-    return product;
-  });
+  const newStatus =
+    product.status === "Sold" ? "Available" : "Sold";
 
-  saveProducts();
-  renderProducts();
+  const { error } = await db
+    .from("laptops")
+    .update({
+      status: newStatus,
+      updated_at: new Date().toISOString()
+    })
+    .eq("id", id);
 
-  showToast("Product availability updated.");
+  if (error) {
+    showToast(error.message);
+    return;
+  }
+
+  await loadProducts();
+
+  showToast("Product status updated.");
 }
 
-/* =========================================
-   14. CLOSE MODAL
-========================================= */
+// ========================================
+// 17. CLOSE MODAL
+// ========================================
 
 function closeModal() {
   modal.classList.remove("open");
 }
 
-document.getElementById("closeModal").addEventListener("click",closeModal);
-document.getElementById("cancelBtn").addEventListener("click",closeModal);
+document.getElementById("closeModal")
+  .addEventListener("click", closeModal);
 
-modal.addEventListener("click",event => {
+document.getElementById("cancelBtn")
+  .addEventListener("click", closeModal);
+
+modal.addEventListener("click", function(event) {
   if (event.target === modal) closeModal();
 });
 
-/* =========================================
-   15. BUTTON EVENTS
-========================================= */
+// ========================================
+// 18. BUTTON EVENTS
+// ========================================
 
 document.getElementById("addLaptopBtn")
-  .addEventListener("click",openAddModal);
+  .addEventListener("click", openAddModal);
 
 document.getElementById("addFromSidebar")
-  .addEventListener("click",openAddModal);
+  .addEventListener("click", openAddModal);
 
 document.getElementById("searchProducts")
-  .addEventListener("input",renderProducts);
+  .addEventListener("input", renderProducts);
 
 document.getElementById("statusFilter")
-  .addEventListener("change",renderProducts);
+  .addEventListener("change", renderProducts);
 
-/* =========================================
-   16. SIDEBAR NAVIGATION
-========================================= */
+// ========================================
+// 19. SIDEBAR NAVIGATION
+// ========================================
 
 document.querySelectorAll(".nav-link[data-page]").forEach(button => {
 
-  button.addEventListener("click",() => {
+  button.addEventListener("click", function() {
 
     document.querySelectorAll(".nav-link[data-page]")
       .forEach(item => item.classList.remove("active"));
@@ -1164,32 +1406,55 @@ document.querySelectorAll(".nav-link[data-page]").forEach(button => {
     document.getElementById("sidebar").classList.remove("open");
 
     document.querySelector(".panel").scrollIntoView({
-      behavior:"smooth",
-      block:"start"
+      behavior: "smooth",
+      block: "start"
     });
 
   });
 
 });
 
-/* =========================================
-   17. MOBILE SIDEBAR
-========================================= */
+// ========================================
+// 20. MOBILE SIDEBAR
+// ========================================
 
-document.getElementById("menuToggle").addEventListener("click",() => {
-  document.getElementById("sidebar").classList.toggle("open");
-});
-   
-<!-- Supabase JavaScript Library -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+document.getElementById("menuToggle")
+  .addEventListener("click", function() {
 
-<!-- LAPTOPX Supabase Configuration -->
-<script src="./config.js"></script>
-/* =========================================
-   18. INITIALIZE ADMIN DASHBOARD
-========================================= */
+    document.getElementById("sidebar")
+      .classList.toggle("open");
 
-renderProducts();
+  });
+
+// ========================================
+// 21. INITIALIZE DASHBOARD
+// ========================================
+
+if (!db) {
+
+  document.getElementById("loginError").textContent =
+    "Supabase configuration not found. Check config.js.";
+
+} else {
+
+  checkAdmin();
+
+  db.auth.onAuthStateChange((event) => {
+
+    if (event === "SIGNED_OUT") {
+
+      currentAdmin = null;
+      products = [];
+
+      document.querySelector(".app").style.display = "none";
+      loginScreen.style.display = "flex";
+
+    }
+
+  });
+
+}
+
 lucide.createIcons();
 
 </script>
