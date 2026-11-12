@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -1524,522 +1524,6 @@
     </div>
   </div>
 
-  <!-- =======================================
-       JAVASCRIPT
-  ======================================== -->
-
-  <script>
-
-    /* =========================================
-       1. WEBSITE CONFIGURATION
-
-       IMPORTANT:
-       Replace the WhatsApp number below with
-       your own number including country code.
-       Example: 919876543210
-    ========================================= */
-
-    const CONFIG = {
-      whatsappNumber: "919876543210",
-      currency: "₹"
-    };
-
-    /* =========================================
-       2. SAMPLE PRODUCT DATABASE
-
-       Abhi products demo data se aa rahe hain.
-       Baad mein Supabase database se connect karenge.
-    ========================================= */
-
-    const laptops = [
-
-      {
-        id: 1,
-        name: "MacBook Air M2",
-        brand: "Apple",
-        category: "Premium",
-        price: 79990,
-        processor: "Apple M2",
-        ram: "8GB RAM",
-        storage: "256GB SSD",
-        display: "13.6-inch",
-        badge: "Premium",
-        image: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=900",
-        description: "A premium lightweight laptop for productivity, creativity and everyday work."
-      },
-
-      {
-        id: 2,
-        name: "ROG Strix G16",
-        brand: "ASUS",
-        category: "Gaming",
-        price: 114990,
-        processor: "Intel Core i7",
-        ram: "16GB RAM",
-        storage: "1TB SSD",
-        display: "16-inch",
-        badge: "Gaming",
-        image: "https://images.unsplash.com/photo-1593642632823-8f785ba67e45?w=900",
-        description: "A performance-focused gaming laptop designed for demanding workloads."
-      },
-
-      {
-        id: 3,
-        name: "ThinkPad E14",
-        brand: "Lenovo",
-        category: "Business",
-        price: 62990,
-        processor: "Intel Core i5",
-        ram: "16GB RAM",
-        storage: "512GB SSD",
-        display: "14-inch",
-        badge: "Business",
-        image: "https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=900",
-        description: "A practical business laptop for professional productivity."
-      },
-
-      {
-        id: 4,
-        name: "HP Pavilion 15",
-        brand: "HP",
-        category: "Student",
-        price: 48990,
-        processor: "Intel Core i5",
-        ram: "8GB RAM",
-        storage: "512GB SSD",
-        display: "15.6-inch",
-        badge: "Popular",
-        image: "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=900",
-        description: "A versatile everyday laptop for students and general computing."
-      },
-
-      {
-        id: 5,
-        name: "Dell Inspiron 14",
-        brand: "Dell",
-        category: "Business",
-        price: 55990,
-        processor: "Intel Core i5",
-        ram: "8GB RAM",
-        storage: "512GB SSD",
-        display: "14-inch",
-        badge: "Everyday",
-        image: "https://images.unsplash.com/photo-1587614382346-4ec70e388b28?w=900",
-        description: "A compact laptop for daily productivity and office work."
-      },
-
-      {
-        id: 6,
-        name: "Acer Nitro V",
-        brand: "Acer",
-        category: "Gaming",
-        price: 74990,
-        processor: "Intel Core i5",
-        ram: "16GB RAM",
-        storage: "512GB SSD",
-        display: "15.6-inch",
-        badge: "Gaming",
-        image: "https://images.unsplash.com/photo-1603302576837-37561b2e2302?w=900",
-        description: "A gaming-oriented laptop for entertainment and demanding applications."
-      }
-
-    ];
-
-    /* =========================================
-       3. SELECT WEBSITE ELEMENTS
-    ========================================= */
-
-    const productsGrid = document.getElementById("productsGrid");
-    const searchInput = document.getElementById("searchInput");
-    const sortSelect = document.getElementById("sortSelect");
-    const filterList = document.getElementById("filterList");
-    const productModal = document.getElementById("productModal");
-    const modalBody = document.getElementById("modalBody");
-
-    /* =========================================
-       4. WEBSITE STATE
-    ========================================= */
-
-    let activeCategory = "All";
-
-    /* =========================================
-       5. FORMAT PRICE
-    ========================================= */
-
-    function formatPrice(price) {
-      return CONFIG.currency + Number(price).toLocaleString("en-IN");
-    }
-
-    /* =========================================
-       6. CREATE WHATSAPP LINK
-    ========================================= */
-
-    function whatsappLink(message) {
-
-      const number = CONFIG.whatsappNumber;
-
-      return "https://wa.me/" + number +
-        "?text=" + encodeURIComponent(message);
-
-    }
-
-    /* =========================================
-       7. RENDER PRODUCTS
-    ========================================= */
-
-    function renderProducts() {
-
-      let filtered = [...laptops];
-
-      // Category filter
-      if (activeCategory !== "All") {
-        filtered = filtered.filter(product =>
-          product.category === activeCategory
-        );
-      }
-
-      // Search filter
-      const searchText = searchInput.value.toLowerCase().trim();
-
-      if (searchText) {
-        filtered = filtered.filter(product => {
-
-          const searchableText = [
-            product.name,
-            product.brand,
-            product.processor,
-            product.category
-          ].join(" ").toLowerCase();
-
-          return searchableText.includes(searchText);
-
-        });
-      }
-
-      // Sorting
-      const sortValue = sortSelect.value;
-
-      if (sortValue === "low") {
-        filtered.sort((a,b) => a.price - b.price);
-      }
-
-      if (sortValue === "high") {
-        filtered.sort((a,b) => b.price - a.price);
-      }
-
-      if (sortValue === "name") {
-        filtered.sort((a,b) => a.name.localeCompare(b.name));
-      }
-
-      // Empty result message
-      if (filtered.length === 0) {
-
-        productsGrid.innerHTML = `
-          <div class="empty-state">
-            <i data-lucide="search-x" size="40"></i>
-            <h3>No laptops found</h3>
-            <p>Try another search or category.</p>
-          </div>
-        `;
-
-        lucide.createIcons();
-        return;
-      }
-
-      // Generate product cards
-      productsGrid.innerHTML = filtered.map(product => `
-
-        <article class="product-card">
-
-          <div class="product-image-wrap">
-
-            <span class="product-badge">
-              ${product.badge}
-            </span>
-
-            <img
-              src="${product.image}"
-              alt="${product.name}"
-              class="product-image"
-              loading="lazy"
-            >
-
-          </div>
-
-          <div class="product-info">
-
-            <div class="product-brand">
-              ${product.brand}
-            </div>
-
-            <h3>${product.name}</h3>
-
-            <div class="specs">
-              <span class="spec">${product.processor}</span>
-              <span class="spec">${product.ram}</span>
-              <span class="spec">${product.storage}</span>
-              <span class="spec">${product.display}</span>
-            </div>
-
-            <div class="product-bottom">
-
-              <div class="price">
-                ${formatPrice(product.price)}
-                <small>Listed price</small>
-              </div>
-
-              <div class="product-actions">
-
-                <button
-                  class="small-btn details-btn"
-                  onclick="showDetails(${product.id})"
-                >
-                  Details
-                </button>
-
-                <a
-                  class="small-btn"
-                  href="${whatsappLink("Hello! I am interested in " + product.name + ". Please share more details.")}"
-                  target="_blank"
-                  rel="noopener"
-                >
-                  Enquire
-                </a>
-
-              </div>
-
-            </div>
-
-          </div>
-
-        </article>
-
-      `).join("");
-
-      lucide.createIcons();
-
-    }
-
-    /* =========================================
-       8. CATEGORY FILTER EVENTS
-    ========================================= */
-
-    filterList.addEventListener("click", function(event) {
-
-      const button = event.target.closest(".filter-btn");
-
-      if (!button) return;
-
-      activeCategory = button.dataset.filter;
-
-      document.querySelectorAll(".filter-btn").forEach(btn => {
-        btn.classList.remove("active");
-      });
-
-      button.classList.add("active");
-
-      renderProducts();
-
-    });
-
-    /* =========================================
-       9. CATEGORY CARD EVENTS
-    ========================================= */
-
-    document.querySelectorAll(".category-card").forEach(card => {
-
-      card.addEventListener("click", function() {
-
-        activeCategory = this.dataset.category;
-
-        document.querySelectorAll(".filter-btn").forEach(btn => {
-          btn.classList.toggle(
-            "active",
-            btn.dataset.filter === activeCategory
-          );
-        });
-
-        renderProducts();
-
-        document.getElementById("products").scrollIntoView({
-          behavior: "smooth"
-        });
-
-      });
-
-    });
-
-    /* =========================================
-       10. SEARCH AND SORT EVENTS
-    ========================================= */
-
-    searchInput.addEventListener("input", renderProducts);
-
-    sortSelect.addEventListener("change", renderProducts);
-
-    /* =========================================
-       11. PRODUCT DETAILS POPUP
-    ========================================= */
-
-    function showDetails(productId) {
-
-      const product = laptops.find(item => item.id === productId);
-
-      if (!product) return;
-
-      modalBody.innerHTML = `
-
-        <div class="modal-grid">
-
-          <img src="${product.image}" alt="${product.name}">
-
-          <div>
-
-            <div class="product-brand">${product.brand}</div>
-
-            <h2>${product.name}</h2>
-
-            <div class="price">
-              ${formatPrice(product.price)}
-            </div>
-
-            <p>${product.description}</p>
-
-            <div class="specs">
-              <span class="spec">${product.processor}</span>
-              <span class="spec">${product.ram}</span>
-              <span class="spec">${product.storage}</span>
-              <span class="spec">${product.display}</span>
-            </div>
-
-            <a
-              class="btn btn-primary"
-              href="${whatsappLink("Hello! I want to enquire about " + product.name + ". Please share availability and details.")}"
-              target="_blank"
-              rel="noopener"
-            >
-              <i data-lucide="message-circle"></i>
-              Enquire on WhatsApp
-            </a>
-
-          </div>
-
-        </div>
-
-      `;
-
-      productModal.classList.add("open");
-
-      document.body.style.overflow = "hidden";
-
-      lucide.createIcons();
-
-    }
-
-    /* =========================================
-       12. CLOSE PRODUCT POPUP
-    ========================================= */
-
-    function closeProductModal() {
-
-      productModal.classList.remove("open");
-
-      document.body.style.overflow = "";
-
-    }
-
-    document.getElementById("closeModal")
-      .addEventListener("click", closeProductModal);
-
-    productModal.addEventListener("click", function(event) {
-
-      if (event.target === productModal) {
-        closeProductModal();
-      }
-
-    });
-
-    document.addEventListener("keydown", function(event) {
-
-      if (event.key === "Escape") {
-        closeProductModal();
-      }
-
-    });
-
-    /* =========================================
-       13. MOBILE NAVIGATION
-    ========================================= */
-
-    const menuButton = document.getElementById("menuButton");
-    const navLinks = document.getElementById("navLinks");
-
-    menuButton.addEventListener("click", function() {
-
-      navLinks.classList.toggle("show");
-
-    });
-
-    navLinks.querySelectorAll("a").forEach(link => {
-
-      link.addEventListener("click", function() {
-        navLinks.classList.remove("show");
-      });
-
-    });
-
-    /* =========================================
-       14. GENERAL WHATSAPP BUTTONS
-    ========================================= */
-
-    document.querySelectorAll(".whatsapp-general").forEach(link => {
-
-      link.href = whatsappLink(
-        "Hello! I want to know more about your available laptops."
-      );
-
-    });
-
-    /* =========================================
-       15. SCROLL REVEAL ANIMATION
-    ========================================= */
-
-    const observer = new IntersectionObserver((entries) => {
-
-      entries.forEach(entry => {
-
-        if (entry.isIntersecting) {
-
-          entry.target.classList.add("visible");
-
-          observer.unobserve(entry.target);
-
-        }
-
-      });
-
-    }, {
-      threshold: 0.12
-    });
-
-    document.querySelectorAll(".reveal").forEach(element => {
-      observer.observe(element);
-    });
-
-    /* =========================================
-       16. FOOTER YEAR
-    ========================================= */
-
-    document.getElementById("currentYear").textContent =
-      new Date().getFullYear();
-
-    /* =========================================
-       17. INITIALIZE WEBSITE
-    ========================================= */
-
-    renderProducts();
-
-    lucide.createIcons();
 
 <!-- Supabase JavaScript Library -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -2047,10 +1531,375 @@
 <!-- LAPTOPX Supabase Configuration -->
 <script src="./config.js"></script>
 
+<!-- LAPTOPX Website JavaScript -->
+<script>
+const db = window.supabaseClient;
 
+const CONFIG = {
+  whatsappNumber: "919876543210",
+  currency: "₹"
+};
 
+const productsGrid = document.getElementById("productsGrid");
+const searchInput = document.getElementById("searchInput");
+const sortSelect = document.getElementById("sortSelect");
+const filterList = document.getElementById("filterList");
+const productModal = document.getElementById("productModal");
+const modalBody = document.getElementById("modalBody");
 
-  </script>
+let laptops = [];
+let activeCategory = "All";
+
+// Safely display database text inside HTML
+function safe(value) {
+  return String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;"
+  })[char]);
+}
+
+// Format price in Indian currency style
+function formatPrice(price) {
+  return CONFIG.currency + Number(price || 0).toLocaleString("en-IN");
+}
+
+// WhatsApp link
+function whatsappLink(message) {
+  return "https://wa.me/" + CONFIG.whatsappNumber +
+    "?text=" + encodeURIComponent(message);
+}
+
+// Load laptops from Supabase
+async function loadLaptops() {
+  productsGrid.innerHTML = `
+    <div class="empty-state">
+      Loading laptops...
+    </div>
+  `;
+
+  const { data, error } = await db
+    .from("laptops")
+    .select("*")
+    .eq("status", "Available")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Supabase error:", error);
+    productsGrid.innerHTML = `
+      <div class="empty-state">
+        <h3>Unable to load laptops</h3>
+        <p>Please try again later.</p>
+      </div>
+    `;
+    return;
+  }
+
+  laptops = data || [];
+  renderProducts();
+}
+
+// Render products
+function renderProducts() {
+  let filtered = [...laptops];
+
+  // Category filter
+  if (activeCategory !== "All") {
+    filtered = filtered.filter(product =>
+      product.category === activeCategory
+    );
+  }
+
+  // Search
+  const searchText = searchInput.value.toLowerCase().trim();
+
+  if (searchText) {
+    filtered = filtered.filter(product => {
+      const searchableText = [
+        product.name,
+        product.brand,
+        product.processor,
+        product.category
+      ].join(" ").toLowerCase();
+
+      return searchableText.includes(searchText);
+    });
+  }
+
+  // Sorting
+  const sortValue = sortSelect.value;
+
+  if (sortValue === "low") {
+    filtered.sort((a, b) => Number(a.price) - Number(b.price));
+  }
+
+  if (sortValue === "high") {
+    filtered.sort((a, b) => Number(b.price) - Number(a.price));
+  }
+
+  if (sortValue === "name") {
+    filtered.sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  // No products found
+  if (filtered.length === 0) {
+    productsGrid.innerHTML = `
+      <div class="empty-state">
+        <h3>No laptops found</h3>
+        <p>Try another search or category.</p>
+      </div>
+    `;
+    return;
+  }
+
+  // Product cards
+  productsGrid.innerHTML = filtered.map(product => `
+    <article class="product-card">
+
+      <div class="product-image-wrap">
+
+        <span class="product-badge">
+          ${safe(product.category)}
+        </span>
+
+        <img
+          src="${safe(product.image_url || "")}"
+          alt="${safe(product.name)}"
+          class="product-image"
+          loading="lazy"
+        >
+
+      </div>
+
+      <div class="product-info">
+
+        <div class="product-brand">
+          ${safe(product.brand)}
+        </div>
+
+        <h3>${safe(product.name)}</h3>
+
+        <div class="specs">
+          <span class="spec">${safe(product.processor)}</span>
+          <span class="spec">${safe(product.ram)}</span>
+          <span class="spec">${safe(product.storage)}</span>
+          <span class="spec">${safe(product.display)}</span>
+        </div>
+
+        <div class="product-bottom">
+
+          <div class="price">
+            ${formatPrice(product.price)}
+            <small>Listed price</small>
+          </div>
+
+          <div class="product-actions">
+
+            <button
+              class="small-btn details-btn"
+              data-details-id="${safe(product.id)}"
+            >
+              Details
+            </button>
+
+            <a
+              class="small-btn"
+              href="${whatsappLink("Hello! I am interested in " + product.name + ". Please share more details.")}"
+              target="_blank"
+              rel="noopener"
+            >
+              Enquire
+            </a>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </article>
+  `).join("");
+}
+
+// Product details button
+productsGrid.addEventListener("click", function(event) {
+  const button = event.target.closest("[data-details-id]");
+
+  if (!button) return;
+
+  showDetails(button.dataset.detailsId);
+});
+
+// Category filter buttons
+filterList.addEventListener("click", function(event) {
+  const button = event.target.closest(".filter-btn");
+
+  if (!button) return;
+
+  activeCategory = button.dataset.filter;
+
+  document.querySelectorAll(".filter-btn").forEach(btn => {
+    btn.classList.remove("active");
+  });
+
+  button.classList.add("active");
+
+  renderProducts();
+});
+
+// Category cards
+document.querySelectorAll(".category-card").forEach(card => {
+  card.addEventListener("click", function() {
+    activeCategory = this.dataset.category;
+
+    document.querySelectorAll(".filter-btn").forEach(btn => {
+      btn.classList.toggle(
+        "active",
+        btn.dataset.filter === activeCategory
+      );
+    });
+
+    renderProducts();
+
+    document.getElementById("products").scrollIntoView({
+      behavior: "smooth"
+    });
+  });
+});
+
+// Search and sorting
+searchInput.addEventListener("input", renderProducts);
+sortSelect.addEventListener("change", renderProducts);
+
+// Show product details
+function showDetails(productId) {
+  const product = laptops.find(item => item.id === productId);
+
+  if (!product) return;
+
+  modalBody.innerHTML = `
+    <div class="modal-grid">
+
+      <img
+        src="${safe(product.image_url || "")}"
+        alt="${safe(product.name)}"
+      >
+
+      <div>
+
+        <div class="product-brand">
+          ${safe(product.brand)}
+        </div>
+
+        <h2>${safe(product.name)}</h2>
+
+        <div class="price">
+          ${formatPrice(product.price)}
+        </div>
+
+        <p>${safe(product.description)}</p>
+
+        <div class="specs">
+          <span class="spec">${safe(product.processor)}</span>
+          <span class="spec">${safe(product.ram)}</span>
+          <span class="spec">${safe(product.storage)}</span>
+          <span class="spec">${safe(product.display)}</span>
+        </div>
+
+        <a
+          class="btn btn-primary"
+          href="${whatsappLink("Hello! I want to enquire about " + product.name + ". Please share availability and details.")}"
+          target="_blank"
+          rel="noopener"
+        >
+          Enquire on WhatsApp
+        </a>
+
+      </div>
+
+    </div>
+  `;
+
+  productModal.classList.add("open");
+  document.body.style.overflow = "hidden";
+}
+
+// Close product popup
+function closeProductModal() {
+  productModal.classList.remove("open");
+  document.body.style.overflow = "";
+}
+
+document.getElementById("closeModal")
+  .addEventListener("click", closeProductModal);
+
+productModal.addEventListener("click", function(event) {
+  if (event.target === productModal) {
+    closeProductModal();
+  }
+});
+
+document.addEventListener("keydown", function(event) {
+  if (event.key === "Escape") {
+    closeProductModal();
+  }
+});
+
+// Mobile navigation
+const menuButton = document.getElementById("menuButton");
+const navLinks = document.getElementById("navLinks");
+
+menuButton.addEventListener("click", function() {
+  navLinks.classList.toggle("show");
+});
+
+navLinks.querySelectorAll("a").forEach(link => {
+  link.addEventListener("click", function() {
+    navLinks.classList.remove("show");
+  });
+});
+
+// General WhatsApp buttons
+document.querySelectorAll(".whatsapp-general").forEach(link => {
+  link.href = whatsappLink(
+    "Hello! I want to know more about your available laptops."
+  );
+});
+
+// Scroll animations
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add("visible");
+      observer.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.12 });
+
+document.querySelectorAll(".reveal").forEach(element => {
+  observer.observe(element);
+});
+
+// Footer year
+document.getElementById("currentYear").textContent =
+  new Date().getFullYear();
+
+// Start website
+if (db) {
+  loadLaptops();
+} else {
+  console.error("Supabase client not found. Check config.js.");
+  productsGrid.innerHTML = `
+    <div class="empty-state">
+      <h3>Website configuration error</h3>
+      <p>Please check your config.js file.</p>
+    </div>
+  `;
+}
+
+</script>
 
 </body>
 </html>
