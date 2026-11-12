@@ -1,0 +1,1193 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LAPTOPX | Admin Dashboard</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<style>
+/* =========================================
+   1. GLOBAL STYLES
+========================================= */
+:root {
+  --bg:#080d18;
+  --sidebar:#0d1524;
+  --card:#111c2d;
+  --card2:#172439;
+  --text:#edf2ff;
+  --muted:#8d9bb2;
+  --primary:#6c8cff;
+  --border:rgba(255,255,255,.08);
+  --green:#35c98a;
+  --red:#ff6b78;
+}
+
+* {margin:0;padding:0;box-sizing:border-box}
+
+body {
+  background:var(--bg);
+  color:var(--text);
+  font-family:'DM Sans',sans-serif;
+}
+
+button,input,select,textarea {font:inherit}
+button {cursor:pointer}
+a {text-decoration:none;color:inherit}
+
+.app {display:flex;min-height:100vh}
+
+/* =========================================
+   2. SIDEBAR
+========================================= */
+.sidebar {
+  width:250px;
+  background:var(--sidebar);
+  border-right:1px solid var(--border);
+  padding:25px 17px;
+  position:fixed;
+  top:0;bottom:0;left:0;
+  z-index:20;
+  display:flex;
+  flex-direction:column;
+  transition:.3s;
+}
+
+.logo {
+  font:800 25px 'Manrope',sans-serif;
+  letter-spacing:-1.5px;
+  padding:0 12px 35px;
+}
+
+.logo span {color:var(--primary)}
+
+.sidebar-label {
+  color:#64748b;
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:1.5px;
+  padding:0 12px 13px;
+}
+
+.nav-link {
+  width:100%;
+  display:flex;
+  align-items:center;
+  gap:13px;
+  border:0;
+  color:#9aa8bd;
+  background:transparent;
+  padding:13px 14px;
+  border-radius:11px;
+  margin-bottom:6px;
+  font-size:13px;
+  text-align:left;
+  transition:.2s;
+}
+
+.nav-link:hover,.nav-link.active {
+  color:white;
+  background:rgba(108,140,255,.14);
+}
+
+.nav-link.active {box-shadow:inset 3px 0 var(--primary)}
+
+.sidebar-bottom {margin-top:auto}
+
+.demo-label {
+  margin:15px 5px;
+  padding:12px;
+  border:1px solid rgba(255,190,80,.2);
+  background:rgba(255,190,80,.07);
+  color:#ffc76a;
+  border-radius:10px;
+  font-size:11px;
+  line-height:1.5;
+}
+
+/* =========================================
+   3. MAIN AREA AND TOPBAR
+========================================= */
+.main {
+  margin-left:250px;
+  width:calc(100% - 250px);
+}
+
+.topbar {
+  height:75px;
+  border-bottom:1px solid var(--border);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:0 35px;
+  background:rgba(8,13,24,.9);
+  position:sticky;
+  top:0;
+  z-index:10;
+  backdrop-filter:blur(15px);
+}
+
+.top-left {display:flex;align-items:center;gap:15px}
+
+.topbar h2 {
+  font:700 17px 'Manrope',sans-serif;
+}
+
+.topbar small {color:var(--muted);font-size:11px}
+
+.admin-profile {
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.avatar {
+  width:38px;height:38px;
+  border-radius:12px;
+  display:grid;place-items:center;
+  background:rgba(108,140,255,.18);
+  color:#a8baff;
+}
+
+.profile-text strong {font-size:12px;display:block}
+.profile-text small {font-size:10px;color:var(--muted)}
+
+.menu-toggle {
+  display:none;
+  background:var(--card);
+  color:white;
+  border:1px solid var(--border);
+  border-radius:9px;
+  padding:9px;
+}
+
+/* =========================================
+   4. CONTENT AREA
+========================================= */
+.content {padding:32px 35px;max-width:1600px;margin:auto}
+
+.page-heading {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:15px;
+  margin-bottom:27px;
+  flex-wrap:wrap;
+}
+
+.page-heading h1 {
+  font:800 27px 'Manrope',sans-serif;
+  letter-spacing:-1px;
+}
+
+.page-heading p {color:var(--muted);font-size:12px;margin-top:5px}
+
+.primary-btn,.secondary-btn,.danger-btn {
+  display:inline-flex;
+  justify-content:center;
+  align-items:center;
+  gap:8px;
+  border:0;
+  padding:11px 16px;
+  border-radius:10px;
+  font-size:12px;
+  font-weight:700;
+  transition:.2s;
+}
+
+.primary-btn {background:var(--primary);color:white}
+.primary-btn:hover {background:#5275f1;transform:translateY(-2px)}
+.secondary-btn {background:var(--card2);color:white;border:1px solid var(--border)}
+.danger-btn {background:rgba(255,107,120,.12);color:#ff8791}
+.full-btn {width:100%}
+
+/* =========================================
+   5. DASHBOARD STATISTICS
+========================================= */
+.stats-grid {
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:17px;
+  margin-bottom:30px;
+}
+
+.stat-card {
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:15px;
+  padding:21px;
+}
+
+.stat-top {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:20px;
+}
+
+.stat-icon {
+  width:42px;height:42px;
+  display:grid;place-items:center;
+  border-radius:12px;
+  background:rgba(108,140,255,.13);
+  color:#9db2ff;
+}
+
+.stat-card p {color:var(--muted);font-size:12px}
+.stat-card h2 {font:800 27px 'Manrope',sans-serif;margin-top:5px}
+
+/* =========================================
+   6. PANELS AND TABLES
+========================================= */
+.panel {
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:15px;
+  overflow:hidden;
+}
+
+.panel-header {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:20px;
+  gap:15px;
+  flex-wrap:wrap;
+}
+
+.panel-header h3 {font:700 15px 'Manrope',sans-serif}
+
+.toolbar {display:flex;gap:10px;flex-wrap:wrap}
+
+.search {
+  background:#0b1422;
+  border:1px solid var(--border);
+  color:white;
+  outline:none;
+  padding:11px 13px;
+  border-radius:9px;
+  min-width:220px;
+  font-size:12px;
+}
+
+.filter-select {
+  background:#0b1422;
+  border:1px solid var(--border);
+  color:white;
+  padding:10px;
+  border-radius:9px;
+  outline:none;
+  font-size:12px;
+}
+
+.table-wrap {overflow-x:auto}
+
+table {width:100%;border-collapse:collapse;min-width:700px}
+
+th {
+  background:#0d1727;
+  color:#8493aa;
+  font-size:10px;
+  text-transform:uppercase;
+  letter-spacing:1px;
+  text-align:left;
+  padding:15px 18px;
+}
+
+td {
+  padding:15px 18px;
+  border-top:1px solid var(--border);
+  font-size:12px;
+  vertical-align:middle;
+}
+
+.product-cell {display:flex;align-items:center;gap:12px;min-width:190px}
+
+.product-cell img {
+  width:53px;height:43px;
+  object-fit:contain;
+  background:#1b2a40;
+  border-radius:8px;
+}
+
+.product-cell strong {display:block;font-size:12px}
+.product-cell small {color:var(--muted);font-size:10px}
+
+.status {
+  display:inline-block;
+  padding:5px 9px;
+  border-radius:20px;
+  font-size:10px;
+  font-weight:700;
+}
+
+.available {background:rgba(53,201,138,.12);color:#5ee0a6}
+.sold {background:rgba(255,107,120,.13);color:#ff929a}
+
+.actions {display:flex;gap:7px}
+
+.action-btn {
+  width:32px;height:32px;
+  display:grid;place-items:center;
+  background:#1b2a40;
+  color:white;
+  border:1px solid var(--border);
+  border-radius:8px;
+}
+
+.action-btn:hover {border-color:var(--primary);color:#a9baff}
+.action-btn.delete:hover {color:var(--red)}
+
+.empty {
+  text-align:center;
+  padding:50px 20px;
+  color:var(--muted);
+}
+
+/* =========================================
+   7. FORM MODAL
+========================================= */
+.modal {
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:100;
+  background:rgba(0,0,0,.78);
+  backdrop-filter:blur(8px);
+  padding:20px;
+  align-items:center;
+  justify-content:center;
+}
+
+.modal.open {display:flex}
+
+.modal-box {
+  width:min(760px,100%);
+  max-height:92vh;
+  overflow:auto;
+  background:#111c2d;
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:25px;
+}
+
+.modal-heading {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:25px;
+}
+
+.modal-heading h2 {font:700 20px 'Manrope',sans-serif}
+
+.close-btn {
+  background:#203047;
+  color:white;
+  border:0;
+  border-radius:8px;
+  padding:9px;
+}
+
+.form-grid {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:17px;
+}
+
+.form-group {display:flex;flex-direction:column;gap:7px}
+.form-group.full {grid-column:1/-1}
+
+.form-group label {
+  color:#aab7cb;
+  font-size:11px;
+  font-weight:700;
+}
+
+.form-group input,.form-group select,.form-group textarea {
+  width:100%;
+  padding:12px;
+  background:#0a1423;
+  border:1px solid var(--border);
+  border-radius:9px;
+  color:white;
+  outline:none;
+  font-size:12px;
+}
+
+.form-group input:focus,.form-group textarea:focus {
+  border-color:var(--primary);
+}
+
+.form-group textarea {min-height:85px;resize:vertical}
+
+.form-note {font-size:10px;color:var(--muted);line-height:1.5}
+
+.form-actions {
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+  margin-top:22px;
+}
+
+/* =========================================
+   8. TOAST MESSAGE
+========================================= */
+.toast {
+  position:fixed;
+  bottom:25px;
+  right:25px;
+  z-index:200;
+  background:#1b2a40;
+  color:white;
+  padding:14px 20px;
+  border:1px solid var(--border);
+  border-radius:11px;
+  font-size:12px;
+  opacity:0;
+  transform:translateY(15px);
+  pointer-events:none;
+  transition:.3s;
+}
+
+.toast.show {opacity:1;transform:translateY(0)}
+
+/* =========================================
+   9. RESPONSIVE DESIGN
+========================================= */
+@media(max-width:1000px) {
+  .stats-grid {grid-template-columns:repeat(2,1fr)}
+}
+
+@media(max-width:700px) {
+  .sidebar {transform:translateX(-100%)}
+  .sidebar.open {transform:translateX(0)}
+  .main {margin-left:0;width:100%}
+  .menu-toggle {display:grid}
+  .topbar {padding:0 17px}
+  .content {padding:25px 16px}
+  .stats-grid {gap:10px}
+  .stat-card {padding:15px}
+  .stat-card h2 {font-size:23px}
+  .form-grid {grid-template-columns:1fr}
+  .form-group.full {grid-column:auto}
+  .profile-text {display:none}
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+
+    <div class="logo">LAPTOP<span>X.</span></div>
+
+    <div class="sidebar-label">MAIN MENU</div>
+
+    <button class="nav-link active" data-page="dashboard">
+      <i data-lucide="layout-dashboard"></i> Dashboard
+    </button>
+
+    <button class="nav-link" data-page="products">
+      <i data-lucide="laptop"></i> All Products
+    </button>
+
+    <button class="nav-link" id="addFromSidebar">
+      <i data-lucide="plus-circle"></i> Add New Laptop
+    </button>
+
+    <div class="sidebar-bottom">
+      <div class="demo-label">
+        <strong>DEMO MODE</strong><br>
+        Browser storage is being used. Cloud sync and secure login are not connected yet.
+      </div>
+
+      <a class="nav-link" href="index.html" target="_blank">
+        <i data-lucide="external-link"></i> View Main Website
+      </a>
+    </div>
+
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <div class="top-left">
+        <button class="menu-toggle" id="menuToggle" aria-label="Open menu">
+          <i data-lucide="menu"></i>
+        </button>
+        <div>
+          <h2>Admin Dashboard</h2>
+          <small>Manage your laptop store</small>
+        </div>
+      </div>
+
+      <div class="admin-profile">
+        <div class="avatar"><i data-lucide="user-round"></i></div>
+        <div class="profile-text">
+          <strong>Store Admin</strong>
+          <small>Demo dashboard</small>
+        </div>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- PAGE HEADING -->
+      <div class="page-heading">
+        <div>
+          <h1>Dashboard Overview</h1>
+          <p>Welcome! Here's your store inventory overview.</p>
+        </div>
+
+        <button class="primary-btn" id="addLaptopBtn">
+          <i data-lucide="plus" size="17"></i>
+          Add New Laptop
+        </button>
+      </div>
+
+      <!-- STATISTICS -->
+      <section class="stats-grid">
+
+        <div class="stat-card">
+          <div class="stat-top">
+            <p>Total Laptops</p>
+            <div class="stat-icon"><i data-lucide="laptop"></i></div>
+          </div>
+          <h2 id="totalCount">0</h2>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-top">
+            <p>Available</p>
+            <div class="stat-icon"><i data-lucide="package-check"></i></div>
+          </div>
+          <h2 id="availableCount">0</h2>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-top">
+            <p>Sold Products</p>
+            <div class="stat-icon"><i data-lucide="shopping-bag"></i></div>
+          </div>
+          <h2 id="soldCount">0</h2>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-top">
+            <p>Inventory Value</p>
+            <div class="stat-icon"><i data-lucide="indian-rupee"></i></div>
+          </div>
+          <h2 id="inventoryValue">₹0</h2>
+        </div>
+
+      </section>
+
+      <!-- PRODUCT MANAGEMENT -->
+      <section class="panel">
+
+        <div class="panel-header">
+          <h3>Product Inventory</h3>
+
+          <div class="toolbar">
+            <input
+              type="search"
+              class="search"
+              id="searchProducts"
+              placeholder="Search laptops..."
+            >
+
+            <select class="filter-select" id="statusFilter">
+              <option value="All">All Status</option>
+              <option value="Available">Available</option>
+              <option value="Sold">Sold</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Brand</th>
+                <th>Price</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+
+            <tbody id="productTable"></tbody>
+          </table>
+        </div>
+
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<!-- ADD / EDIT MODAL -->
+<div class="modal" id="productModal">
+
+  <div class="modal-box">
+
+    <div class="modal-heading">
+      <h2 id="modalTitle">Add New Laptop</h2>
+      <button class="close-btn" id="closeModal" aria-label="Close">
+        <i data-lucide="x"></i>
+      </button>
+    </div>
+
+    <form id="productForm">
+
+      <input type="hidden" id="editId">
+
+      <div class="form-grid">
+
+        <div class="form-group">
+          <label>Laptop Name *</label>
+          <input id="name" required placeholder="Example: MacBook Air M2">
+        </div>
+
+        <div class="form-group">
+          <label>Brand *</label>
+          <input id="brand" required placeholder="Example: Apple">
+        </div>
+
+        <div class="form-group">
+          <label>Price (INR) *</label>
+          <input id="price" type="number" min="0" required placeholder="79990">
+        </div>
+
+        <div class="form-group">
+          <label>Category *</label>
+          <select id="category" required>
+            <option value="Gaming">Gaming</option>
+            <option value="Business">Business</option>
+            <option value="Student">Student</option>
+            <option value="Premium">Premium</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Processor</label>
+          <input id="processor" placeholder="Intel Core i5">
+        </div>
+
+        <div class="form-group">
+          <label>RAM</label>
+          <input id="ram" placeholder="16GB RAM">
+        </div>
+
+        <div class="form-group">
+          <label>Storage</label>
+          <input id="storage" placeholder="512GB SSD">
+        </div>
+
+        <div class="form-group">
+          <label>Display</label>
+          <input id="display" placeholder="15.6-inch">
+        </div>
+
+        <div class="form-group full">
+          <label>Product Image URL *</label>
+          <input id="image" type="url" required
+            placeholder="https://example.com/laptop.jpg">
+          <p class="form-note">
+            Demo mode mein image URL paste karo. Real file upload Supabase Storage connect karne ke baad add hoga.
+          </p>
+        </div>
+
+        <div class="form-group full">
+          <label>Description</label>
+          <textarea id="description"
+            placeholder="Laptop ke baare mein details..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Availability</label>
+          <select id="status">
+            <option value="Available">Available</option>
+            <option value="Sold">Sold</option>
+          </select>
+        </div>
+
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="secondary-btn" id="cancelBtn">
+          Cancel
+        </button>
+        <button type="submit" class="primary-btn">
+          <i data-lucide="save" size="16"></i>
+          Save Laptop
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================
+   1. DEMO PRODUCT DATA
+
+   This is local browser data only.
+   Later we will replace it with Supabase.
+========================================= */
+
+const starterProducts = [
+  {
+    id:1,
+    name:"MacBook Air M2",
+    brand:"Apple",
+    price:79990,
+    category:"Premium",
+    processor:"Apple M2",
+    ram:"8GB RAM",
+    storage:"256GB SSD",
+    display:"13.6-inch",
+    image:"https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=900",
+    description:"Premium lightweight laptop.",
+    status:"Available"
+  },
+  {
+    id:2,
+    name:"ROG Strix G16",
+    brand:"ASUS",
+    price:114990,
+    category:"Gaming",
+    processor:"Intel Core i7",
+    ram:"16GB RAM",
+    storage:"1TB SSD",
+    display:"16-inch",
+    image:"https://images.unsplash.com/photo-1593642632823-8f785ba67e45?w=900",
+    description:"Gaming and high performance laptop.",
+    status:"Available"
+  },
+  {
+    id:3,
+    name:"ThinkPad E14",
+    brand:"Lenovo",
+    price:62990,
+    category:"Business",
+    processor:"Intel Core i5",
+    ram:"16GB RAM",
+    storage:"512GB SSD",
+    display:"14-inch",
+    image:"https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=900",
+    description:"Professional business laptop.",
+    status:"Sold"
+  }
+];
+
+const STORAGE_KEY = "laptopx_demo_products";
+
+/* =========================================
+   2. LOAD AND SAVE DEMO DATA
+========================================= */
+
+function loadProducts() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved === null) return [...starterProducts];
+    const parsed = JSON.parse(saved);
+    return Array.isArray(parsed) ? parsed : [...starterProducts];
+  } catch (error) {
+    return [...starterProducts];
+  }
+}
+
+let products = loadProducts();
+
+function saveProducts() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
+}
+
+/* =========================================
+   3. ELEMENT REFERENCES
+========================================= */
+
+const productTable = document.getElementById("productTable");
+const modal = document.getElementById("productModal");
+const form = document.getElementById("productForm");
+
+/* =========================================
+   4. PRICE FORMAT
+========================================= */
+
+function money(amount) {
+  return "₹" + Number(amount).toLocaleString("en-IN");
+}
+
+/* =========================================
+   5. SAFE TEXT DISPLAY
+========================================= */
+
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#39;"
+  })[char]);
+}
+
+/* =========================================
+   6. TOAST NOTIFICATION
+========================================= */
+
+function showToast(message) {
+  const toast = document.getElementById("toast");
+  toast.textContent = message;
+  toast.classList.add("show");
+
+  setTimeout(() => {
+    toast.classList.remove("show");
+  }, 2500);
+}
+
+/* =========================================
+   7. UPDATE DASHBOARD STATISTICS
+========================================= */
+
+function updateStats() {
+  const available = products.filter(p => p.status === "Available");
+  const sold = products.filter(p => p.status === "Sold");
+
+  document.getElementById("totalCount").textContent = products.length;
+  document.getElementById("availableCount").textContent = available.length;
+  document.getElementById("soldCount").textContent = sold.length;
+
+  const totalValue = available.reduce((sum,p) => sum + Number(p.price),0);
+
+  document.getElementById("inventoryValue").textContent = money(totalValue);
+}
+
+/* =========================================
+   8. DISPLAY PRODUCTS IN TABLE
+========================================= */
+
+function renderProducts() {
+
+  const query = document.getElementById("searchProducts")
+    .value.toLowerCase().trim();
+
+  const status = document.getElementById("statusFilter").value;
+
+  const filtered = products.filter(product => {
+
+    const matchesSearch = [
+      product.name,
+      product.brand,
+      product.category
+    ].join(" ").toLowerCase().includes(query);
+
+    const matchesStatus =
+      status === "All" || product.status === status;
+
+    return matchesSearch && matchesStatus;
+  });
+
+  if (!filtered.length) {
+    productTable.innerHTML = `
+      <tr>
+        <td colspan="5">
+          <div class="empty">No products found.</div>
+        </td>
+      </tr>
+    `;
+  } else {
+
+    productTable.innerHTML = filtered.map(product => `
+
+      <tr>
+
+        <td>
+          <div class="product-cell">
+            <img
+              src="${escapeHTML(product.image)}"
+              alt="${escapeHTML(product.name)}"
+              onerror="this.style.opacity='.3'"
+            >
+            <div>
+              <strong>${escapeHTML(product.name)}</strong>
+              <small>${escapeHTML(product.category)}</small>
+            </div>
+          </div>
+        </td>
+
+        <td>${escapeHTML(product.brand)}</td>
+
+        <td><strong>${money(product.price)}</strong></td>
+
+        <td>
+          <span class="status ${product.status === "Sold" ? "sold":"available"}">
+            ${escapeHTML(product.status)}
+          </span>
+        </td>
+
+        <td>
+          <div class="actions">
+
+            <button class="action-btn"
+              title="Edit product"
+              onclick="editProduct(${Number(product.id)})">
+              <i data-lucide="pencil" size="15"></i>
+            </button>
+
+            <button class="action-btn"
+              title="Toggle availability"
+              onclick="toggleStatus(${Number(product.id)})">
+              <i data-lucide="refresh-cw" size="15"></i>
+            </button>
+
+            <button class="action-btn delete"
+              title="Delete product"
+              onclick="deleteProduct(${Number(product.id)})">
+              <i data-lucide="trash-2" size="15"></i>
+            </button>
+
+          </div>
+        </td>
+
+      </tr>
+
+    `).join("");
+  }
+
+  updateStats();
+  lucide.createIcons();
+}
+
+/* =========================================
+   9. OPEN ADD PRODUCT FORM
+========================================= */
+
+function openAddModal() {
+  form.reset();
+
+  document.getElementById("editId").value = "";
+  document.getElementById("modalTitle").textContent = "Add New Laptop";
+  document.getElementById("status").value = "Available";
+
+  modal.classList.add("open");
+}
+
+/* =========================================
+   10. EDIT EXISTING PRODUCT
+========================================= */
+
+function editProduct(id) {
+
+  const product = products.find(p => p.id === id);
+  if (!product) return;
+
+  document.getElementById("editId").value = product.id;
+  document.getElementById("name").value = product.name;
+  document.getElementById("brand").value = product.brand;
+  document.getElementById("price").value = product.price;
+  document.getElementById("category").value = product.category;
+  document.getElementById("processor").value = product.processor || "";
+  document.getElementById("ram").value = product.ram || "";
+  document.getElementById("storage").value = product.storage || "";
+  document.getElementById("display").value = product.display || "";
+  document.getElementById("image").value = product.image;
+  document.getElementById("description").value = product.description || "";
+  document.getElementById("status").value = product.status;
+
+  document.getElementById("modalTitle").textContent = "Edit Laptop";
+
+  modal.classList.add("open");
+}
+
+/* =========================================
+   11. ADD OR UPDATE PRODUCT
+========================================= */
+
+form.addEventListener("submit", function(event) {
+
+  event.preventDefault();
+
+  const editId = document.getElementById("editId").value;
+
+  const productData = {
+    id: editId ? Number(editId) : Date.now(),
+    name: document.getElementById("name").value.trim(),
+    brand: document.getElementById("brand").value.trim(),
+    price: Number(document.getElementById("price").value),
+    category: document.getElementById("category").value,
+    processor: document.getElementById("processor").value.trim(),
+    ram: document.getElementById("ram").value.trim(),
+    storage: document.getElementById("storage").value.trim(),
+    display: document.getElementById("display").value.trim(),
+    image: document.getElementById("image").value.trim(),
+    description: document.getElementById("description").value.trim(),
+    status: document.getElementById("status").value
+  };
+
+  if (!productData.name || !productData.brand ||
+      !productData.image || !Number.isFinite(productData.price) ||
+      productData.price < 0) {
+    showToast("Please check the required fields.");
+    return;
+  }
+
+  if (editId) {
+
+    products = products.map(product =>
+      product.id === Number(editId) ? productData : product
+    );
+
+    showToast("Laptop updated successfully!");
+
+  } else {
+
+    products.unshift(productData);
+
+    showToast("New laptop added successfully!");
+
+  }
+
+  saveProducts();
+  renderProducts();
+  closeModal();
+});
+
+/* =========================================
+   12. DELETE PRODUCT
+========================================= */
+
+function deleteProduct(id) {
+
+  const product = products.find(p => p.id === id);
+  if (!product) return;
+
+  if (!confirm("Are you sure you want to delete " + product.name + "?")) {
+    return;
+  }
+
+  products = products.filter(p => p.id !== id);
+
+  saveProducts();
+  renderProducts();
+
+  showToast("Product deleted.");
+}
+
+/* =========================================
+   13. MARK SOLD / AVAILABLE
+========================================= */
+
+function toggleStatus(id) {
+
+  products = products.map(product => {
+
+    if (product.id === id) {
+      return {
+        ...product,
+        status: product.status === "Sold" ? "Available" : "Sold"
+      };
+    }
+
+    return product;
+  });
+
+  saveProducts();
+  renderProducts();
+
+  showToast("Product availability updated.");
+}
+
+/* =========================================
+   14. CLOSE MODAL
+========================================= */
+
+function closeModal() {
+  modal.classList.remove("open");
+}
+
+document.getElementById("closeModal").addEventListener("click",closeModal);
+document.getElementById("cancelBtn").addEventListener("click",closeModal);
+
+modal.addEventListener("click",event => {
+  if (event.target === modal) closeModal();
+});
+
+/* =========================================
+   15. BUTTON EVENTS
+========================================= */
+
+document.getElementById("addLaptopBtn")
+  .addEventListener("click",openAddModal);
+
+document.getElementById("addFromSidebar")
+  .addEventListener("click",openAddModal);
+
+document.getElementById("searchProducts")
+  .addEventListener("input",renderProducts);
+
+document.getElementById("statusFilter")
+  .addEventListener("change",renderProducts);
+
+/* =========================================
+   16. SIDEBAR NAVIGATION
+========================================= */
+
+document.querySelectorAll(".nav-link[data-page]").forEach(button => {
+
+  button.addEventListener("click",() => {
+
+    document.querySelectorAll(".nav-link[data-page]")
+      .forEach(item => item.classList.remove("active"));
+
+    button.classList.add("active");
+
+    document.querySelector(".page-heading h1").textContent =
+      button.dataset.page === "dashboard"
+        ? "Dashboard Overview"
+        : "All Products";
+
+    document.getElementById("sidebar").classList.remove("open");
+
+    document.querySelector(".panel").scrollIntoView({
+      behavior:"smooth",
+      block:"start"
+    });
+
+  });
+
+});
+
+/* =========================================
+   17. MOBILE SIDEBAR
+========================================= */
+
+document.getElementById("menuToggle").addEventListener("click",() => {
+  document.getElementById("sidebar").classList.toggle("open");
+});
+
+/* =========================================
+   18. INITIALIZE ADMIN DASHBOARD
+========================================= */
+
+renderProducts();
+lucide.createIcons();
+
+</script>
+</body>
+</html>
+
