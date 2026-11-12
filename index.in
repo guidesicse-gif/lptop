@@ -2041,6 +2041,15 @@
 
     lucide.createIcons();
 
+<!-- Supabase JavaScript Library -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- LAPTOPX Supabase Configuration -->
+<script src="./config.js"></script>
+
+
+
+
   </script>
 
 </body>
